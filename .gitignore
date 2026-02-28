@@ -1,0 +1,15 @@
+# Node
+client/node_modules/
+client/dist/
+
+# Spring Boot
+server/target/
+server/.mvn/
+server/mvnw
+server/mvnw.cmd
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+.DS_Store
