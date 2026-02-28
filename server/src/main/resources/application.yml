@@ -1,11 +1,13 @@
 spring:
   application:
     name: pharos-server
+  config:
+    import: optional:file:./.env[.properties],optional:file:../.env[.properties]
   datasource:
-    # Notice it starts with jdbc:postgresql:// and DOES NOT have the username/password in it
-    url: jdbc:postgresql://ep-fancy-dust-aiy8bzpj-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-    username: neondb_owner            # Paste just the username here
-    password: npg_Y1Hc2qOpLgsI   # Paste just the password here
+    url: jdbc:${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver # Explicitly tells Spring it's Postgres
   jpa:
     hibernate:
       ddl-auto: update
