@@ -3,6 +3,10 @@ spring:
     name: pharos-server
   config:
     import: optional:file:./.env[.properties],optional:file:../.env[.properties]
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
   datasource:
     url: jdbc:${DB_URL}
     username: ${DB_USERNAME}
@@ -19,3 +23,7 @@ spring:
 
 server:
   port: 8080
+
+app:
+  storage:
+    upload-dir: ./uploads

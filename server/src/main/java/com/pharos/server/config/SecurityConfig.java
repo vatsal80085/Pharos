@@ -13,10 +13,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for REST APIs
+                .csrf(csrf -> csrf.disable()) // Crucial: Postman POST requests will 403 if this isn't disabled
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/status").permitAll() // Allow everyone to see the status
-                        .anyRequest().authenticated() // Require authentication for everything else
+                        // Add "/error" to the list of permitted paths
+                        .requestMatchers("/api/status", "/api/files/**", "/error").permitAll()
+                        .anyRequest().authenticated()
                 );
 
         return http.build();
