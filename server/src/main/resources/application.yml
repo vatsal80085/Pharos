@@ -27,3 +27,7 @@ server:
 app:
   storage:
     upload-dir: ./uploads
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: 86400000 # 1 day in milliseconds (24 * 60 * 60 * 1000)
