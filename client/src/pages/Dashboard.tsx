@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, clearToken, type StoredFile } from '../lib/api';
 
+type DashboardFile = StoredFile & {
+  isPending?: boolean;
+};
+
 const formatBytes = (bytes: number) => {
   if (bytes === 0) return '0 B';
 
@@ -14,7 +18,7 @@ const formatBytes = (bytes: number) => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [files, setFiles] = useState<StoredFile[]>([]);
+  const [files, setFiles] = useState<DashboardFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -45,6 +49,7 @@ const Dashboard = () => {
 
   const handleUpload = async (event: React.FormEvent) => {
     event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
 
     if (!selectedFile) {
       setError('Choose a file before uploading.');
@@ -54,21 +59,36 @@ const Dashboard = () => {
     const formData = new FormData();
     formData.append('file', selectedFile);
 
+    const pendingFile: DashboardFile = {
+      id: `pending-${Date.now()}`,
+      originalFilename: selectedFile.name,
+      fileSize: selectedFile.size,
+      contentType: selectedFile.type || null,
+      createdAt: new Date().toISOString(),
+      isPending: true,
+    };
+
     setIsUploading(true);
     setError('');
+    setFiles((currentFiles) => [pendingFile, ...currentFiles]);
 
     try {
-      await api.post('/files/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setSelectedFile(null);
-      (event.currentTarget as HTMLFormElement).reset();
-      await loadFiles();
+      const response = await api.post<StoredFile>('/files/upload', formData);
+      setFiles((currentFiles) => [
+        response.data,
+        ...currentFiles.filter((file) => file.id !== pendingFile.id),
+      ]);
     } catch {
       setError('Upload failed. Check the backend and try again.');
-    } finally {
+      setFiles((currentFiles) => currentFiles.filter((file) => file.id !== pendingFile.id));
       setIsUploading(false);
+      return;
     }
+
+    setSelectedFile(null);
+    form.reset();
+    setError('');
+    setIsUploading(false);
   };
 
   const handleDownload = async (file: StoredFile) => {
@@ -178,21 +198,23 @@ const Dashboard = () => {
                     <p className="truncate font-semibold text-white">{file.originalFilename}</p>
                     <p className="mt-1 text-sm text-slate-400">
                       {formatBytes(file.fileSize)} · {file.contentType ?? 'unknown type'} ·{' '}
-                      {new Date(file.createdAt).toLocaleString()}
+                      {file.isPending ? 'uploading...' : new Date(file.createdAt).toLocaleString()}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <button
                       type="button"
+                      disabled={file.isPending}
                       onClick={() => void handleDownload(file)}
-                      className="rounded-md border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-cyan-300"
+                      className="rounded-md border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Download
                     </button>
                     <button
                       type="button"
+                      disabled={file.isPending}
                       onClick={() => void handleDelete(file.id)}
-                      className="rounded-md border border-red-500/50 px-3 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-500/10"
+                      className="rounded-md border border-red-500/50 px-3 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Delete
                     </button>
