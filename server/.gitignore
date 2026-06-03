@@ -35,3 +35,6 @@ build/
 # Secrets
 .env
 *.env
+
+# Runtime file storage
+uploads/
