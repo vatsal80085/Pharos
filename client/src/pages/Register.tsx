@@ -1,13 +1,28 @@
 // src/pages/Register.tsx
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { api, saveToken, type AuthResponse } from '../lib/api';
 
 const Register = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ fullName: '', email: '', password: '' });
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("INITIALIZING_CREATION:", formData);
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await api.post<AuthResponse>('/auth/register', formData);
+      saveToken(response.data.token);
+      navigate('/dashboard');
+    } catch {
+      setError('Registration failed. Try a different email address.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -37,9 +52,10 @@ const Register = () => {
             <input 
               type="text"
               required
+              value={formData.fullName}
               className="bg-black border-2 border-white/20 p-4 font-mono text-sm text-white focus:outline-none focus:border-indigo-500 focus:shadow-hard-indigo transition-all placeholder:text-gray-700"
               placeholder="IDENTITY_STRING"
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              onChange={(e) => setFormData({...formData, fullName: e.target.value})}
             />
           </div>
 
@@ -50,6 +66,7 @@ const Register = () => {
             <input 
               type="email"
               required
+              value={formData.email}
               className="bg-black border-2 border-white/20 p-4 font-mono text-sm text-white focus:outline-none focus:border-indigo-500 focus:shadow-hard-indigo transition-all placeholder:text-gray-700"
               placeholder="USER@DOMAIN.COM"
               onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -63,17 +80,21 @@ const Register = () => {
             <input 
               type="password"
               required
+              value={formData.password}
               className="bg-black border-2 border-white/20 p-4 font-mono text-sm text-white focus:outline-none focus:border-indigo-500 focus:shadow-hard-indigo transition-all placeholder:text-gray-700"
               placeholder="••••••••"
               onChange={(e) => setFormData({...formData, password: e.target.value})}
             />
           </div>
 
+          {error && <p className="font-mono text-xs text-red-300">{error}</p>}
+
           <button 
             type="submit"
+            disabled={isSubmitting}
             className="w-full bg-white text-black border-2 border-black py-5 font-black uppercase tracking-tighter text-xl hover:bg-indigo-600 hover:text-white transition-all shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-none mt-4"
           >
-            Create_Identity →
+            {isSubmitting ? 'Creating...' : 'Create_Identity ->'}
           </button>
         </form>
 

@@ -57,10 +57,10 @@ const Landing = () => {
 
           <div className="flex flex-col md:flex-row justify-center gap-6">
             <Link
-              to="/register"
+              to="/dashboard"
               className="bg-indigo-600 text-white border-2 border-black px-12 py-5 text-xl font-bold shadow-hard hover:bg-indigo-500 hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all uppercase tracking-tighter"
             >
-              Initialize_Vault
+              Open_Vault
             </Link>
             <button className="bg-transparent text-white border-2 border-white px-12 py-5 text-xl font-bold hover:bg-white hover:text-black transition-all">
               

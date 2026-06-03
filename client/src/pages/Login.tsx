@@ -1,13 +1,28 @@
 // src/pages/Login.tsx
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { api, saveToken, type AuthResponse } from '../lib/api';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("AUTHORIZING_ACCESS:", formData);
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await api.post<AuthResponse>('/auth/login', formData);
+      saveToken(response.data.token);
+      navigate('/dashboard');
+    } catch {
+      setError('Login failed. Check your email and password.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -37,6 +52,7 @@ const Login = () => {
             <input 
               type="email"
               required
+              value={formData.email}
               className="bg-black border-2 border-white/20 p-4 font-mono text-sm text-white focus:outline-none focus:border-indigo-500 focus:shadow-hard-indigo transition-all placeholder:text-gray-800"
               placeholder="USER@DOMAIN.COM"
               onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -52,17 +68,21 @@ const Login = () => {
             <input 
               type="password"
               required
+              value={formData.password}
               className="bg-black border-2 border-white/20 p-4 font-mono text-sm text-white focus:outline-none focus:border-indigo-500 focus:shadow-hard-indigo transition-all placeholder:text-gray-800"
               placeholder="••••••••"
               onChange={(e) => setFormData({...formData, password: e.target.value})}
             />
           </div>
 
+          {error && <p className="font-mono text-xs text-red-300">{error}</p>}
+
           <button 
             type="submit"
+            disabled={isSubmitting}
             className="w-full bg-indigo-600 text-white border-2 border-black py-5 font-black uppercase tracking-tighter text-xl hover:bg-white hover:text-black transition-all shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-none mt-4"
           >
-            Access_Vault →
+            {isSubmitting ? 'Authenticating...' : 'Access_Vault ->'}
           </button>
         </form>
 
